@@ -163,12 +163,14 @@
 // jQuery
 let $currentLevel = 1;
 let $levelTitle = $("#level-title");
+let $resultAlert = $("#level-reached");
 
 $(document).keypress(keydownEventListener);
 
 function keydownEventListener(event) {
     if (!($levelTitle.text() === "Level " + $currentLevel)){
         $levelTitle.text("Level " + $currentLevel);
+        $resultAlert.text("");
         createPattern($currentLevel);
     }
 }
@@ -181,6 +183,7 @@ function clickEventListener() {
         var $buttonColor = $(this).attr("Id");
         simonSpeak($buttonColor);
         buttonAnimation($buttonColor);
+        checkPattern($buttonColor);
     }
 }
 
@@ -228,16 +231,15 @@ function createPattern(level) {
         let colors = ["green", "red", "yellow", "blue"];
         return colors[Math.floor(Math.random() * colors.length)];
     }
-
     for(var i = 0; i < level; i++) {
         $simonSays.push(randomColor());
     }
     playPattern($simonSays);
 }
 
+// Adds delay on playing each sound
 function playPattern(pattern) {
     let $delay = 750;
-
     function processAudio(index) {
         buttonAnimation(pattern[index]);
         let sound = new Audio("./sounds/" + pattern[index] + ".mp3");
@@ -253,5 +255,43 @@ function playPattern(pattern) {
 }
 
 function checkPattern(active) {
-    
+    if (active === $simonSays[0]) {
+        $simonSays.shift();
+        if ($simonSays.length < 1) {
+            // Adds delay to level changing
+            setTimeout(function(){
+                $currentLevel++;
+                $levelTitle.text("Level " + $currentLevel);
+            }, 250);
+
+            // Adds delay to showing new pattern
+            setTimeout(function() {
+                createPattern($currentLevel);
+            }, 750);
+        }
+    } else {
+        gameOver();
+    }
+}
+
+function gameOver(){
+    // Game Over Animation
+    $("body").addClass("game-over");
+    setTimeout(function() {
+        $("body").removeClass("game-over");
+    }, 100);
+
+    // Game Over Sound
+    let sound = new Audio("./sounds/wrong.mp3");
+    sound.play();
+
+    // Player Feedback
+    if ($currentLevel < 8) {
+        $resultAlert.text("Can't beat level " + $currentLevel + "? 😒")
+    } else {
+        $resultAlert.text("You did great! 🚩")
+    }
+
+    $levelTitle.text("Game Over, Press A Key to Try Again.");
+    $currentLevel = 1;
 }
